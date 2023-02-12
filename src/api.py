@@ -1,8 +1,12 @@
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
 
 from ultralytics import YOLO
 from Model_UNET import Unet
+from Model_VGG19 import IntelCnnModel
 import torch
 import numpy as np
 import cv2
@@ -19,8 +23,6 @@ import albumentations as A
 import torch.nn.functional as F
 import joblib
 import Utils_GradientBoosting
-
-import os
 import json
 
 INPUT_PATH = '../input/'
@@ -374,7 +376,7 @@ def load_damage_unet_model(weight_path):
     model = Unet(encoder="resnet34",pre_weight='imagenet',num_classes=2)
     model = model.to(DEVICE)
     try:
-        model.model.load_state_dict(torch.load(weight_path, map_location=torch.device('cuda')))
+        model.model.load_state_dict(torch.load(weight_path, map_location=torch.device('cpu')))
         return model.model
     except:
         try:
@@ -410,7 +412,7 @@ if __name__ == '__main__':
     model4 = load_damage_unet_model(weight_path=SEPARATED_WEIGHT)
 
     #load repair method model
-    repair_method_model = torch.load(REPAIR_METHOD_WEIGHT, map_location='cuda')
+    repair_method_model = torch.load(REPAIR_METHOD_WEIGHT, map_location='cpu')
     
     #load repair cost model
     repair_cost_model = joblib.load(REPAIR_COST_WEIGHT)
